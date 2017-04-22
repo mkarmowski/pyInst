@@ -92,3 +92,4 @@ ENV/
 .ropeproject
 
 start.py
+chromedriver.exe
