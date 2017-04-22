@@ -93,3 +93,4 @@ ENV/
 
 start.py
 chromedriver.exe
+/logs/logs
