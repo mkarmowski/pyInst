@@ -8,7 +8,7 @@ class InstaMain:
     def __init__(self, username=None, password=None):
         self.browser = webdriver.Chrome('webdriver/chromedriver', chrome_options=chrome_options)
         self.logs = open('logs/logs.txt', 'a')
-        self.logs.write('Started: {}'.format(datetime.now().strftime('%%d-%m-%Y %H:%M:%S')))
+        self.logs.write('Started: {}\n'.format(datetime.now().strftime('%d-%m-%Y %H:%M:%S')))
 
         self.username = username
         self.password = password
