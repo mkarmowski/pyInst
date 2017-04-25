@@ -2,6 +2,7 @@ from datetime import datetime
 from random import randint
 
 from modules.comment import comment_post
+from modules.follow import follow
 from modules.like import get_links_by_tag, like_post
 from modules.login import login_user
 from webdriver.options import chrome_options
@@ -22,6 +23,10 @@ class InstaMain:
         self.comment_percentage = 0
         self.comments = []
 
+        self.allow_following = False
+        self.follow_percentage = 0
+        self.do_not_follow = []         # TODO following restrictions
+
     def login(self):
         if login_user(self.browser, self.username, self.password):
             print('Logged in')
@@ -40,6 +45,17 @@ class InstaMain:
 
     def set_comments(self, comments=None):
         self.comments = comments or []
+
+        return self
+
+    def set_allow_following(self, on=False, percentage=0):
+        self.allow_following = on
+        self.follow_percentage = percentage
+
+        return self
+
+    def set_do_not_follow(self, names=None):
+        self.do_not_follow = names or []
 
         return self
 
@@ -77,6 +93,9 @@ class InstaMain:
                             commented_links.append(link)
                             print('Commented on post: {}'.format(link))
 
+                        if self.allow_following:
+                            follow(self.browser)
+
                     else:
                         already_liked += 1
                         already_liked_links.append(link)
@@ -93,3 +112,12 @@ class InstaMain:
         print('Already liked images:\n{}\n'.format(already_liked))
 
         return self
+
+    def quit(self):
+        self.browser.delete_all_cookies()
+        self.browser.close()
+
+        print('Finished')
+        self.logs.write('Finished: {}\n'.format(datetime.now().strftime('%d-%m-%Y %H:%M:%S')))
+        self.logs.write('---' * 10 + '\n\n\n')
+        self.logs.close()
