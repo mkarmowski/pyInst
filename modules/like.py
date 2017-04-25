@@ -1,5 +1,6 @@
 from math import ceil
 from time import sleep
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
 
@@ -43,6 +44,28 @@ def get_links_by_tag(browser, tag, count):
 
     links = [link.get_attribute('href') for link in link_tags]
 
-    print(links[:count])
-    print(len(links))
     return links[:count]
+
+
+def like_post(browser):
+    browser.get('https://www.instagram.com/p/BEVc30BPtBC/')
+
+    try:
+        like_button = browser.find_elements_by_xpath("//a[@role = 'button']/span[text()='Like']")
+    except:
+        like_button = []
+    try:
+        unlike_button = browser.find_elements_by_xpath("//a[@role = 'button']/span[text()='Unlike']")
+    except:
+        unlike_button = []
+
+    if like_button:
+        action = ActionChains(browser).move_to_element(like_button[0]).click().perform()
+        print('Image liked')
+        return True
+    elif unlike_button:
+        print('Image already liked')
+        return False
+    else:
+        print('Cannot find like button')
+        return False
