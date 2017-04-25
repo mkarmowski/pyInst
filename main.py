@@ -1,4 +1,7 @@
 from datetime import datetime
+from random import randint
+
+from modules.comment import comment_post
 from modules.like import get_links_by_tag, like_post
 from modules.login import login_user
 from webdriver.options import chrome_options
@@ -15,6 +18,10 @@ class InstaMain:
         self.username = username
         self.password = password
 
+        self.post_comments = False
+        self.comment_percentage = 0
+        self.comments = []
+
     def login(self):
         if login_user(self.browser, self.username, self.password):
             print('Logged in')
@@ -25,11 +32,24 @@ class InstaMain:
 
         return self
 
+    def set_post_comments(self, on=False, percentage=0):
+        self.post_comments = on
+        self.comment_percentage = percentage
+
+        return self
+
+    def set_comments(self, comments=None):
+        self.comments = comments or []
+
+        return self
+
     def like_image(self, tags=None, count=100):
         liked_images = 0
         already_liked = 0
+        commented = 0
         liked_links = []
         already_liked_links = []
+        commented_links = []
 
         for index, tag in enumerate(tags):
             print(index), print(tag)
@@ -49,6 +69,14 @@ class InstaMain:
                     if liked:
                         liked_images += 1
                         liked_links.append(link)
+                        commenting = randint(0, 100) <= self.comment_percentage
+
+                        if self.post_comments and commenting:
+                            comment_post(self.browser, self.comments)
+                            commented += 1
+                            commented_links.append(link)
+                            print('Commented on post: {}'.format(link))
+
                     else:
                         already_liked += 1
                         already_liked_links.append(link)
