@@ -1,5 +1,5 @@
 from math import ceil
-from time import sleep
+from modules.time import random_sleep
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
@@ -18,7 +18,7 @@ def get_links_by_tag(browser, tag, count):
     else:
         stop = False
         body.send_keys(Keys.END)
-        sleep(2)
+        random_sleep(2)
         load_more.click()
     body.send_keys(Keys.HOME)
 
@@ -34,9 +34,9 @@ def get_links_by_tag(browser, tag, count):
         for i in range(new_page_needed):
             starting_count = links_count
             body.send_keys(Keys.END)
-            sleep(1)
+            random_sleep(2)
             body.send_keys(Keys.HOME)
-            sleep(1)
+            random_sleep(2)
             link_tags = main_tag.find_elements_by_tag_name('a')
             links_count = len(link_tags)
             stop = (starting_count == links_count)
@@ -61,13 +61,13 @@ def like_post(browser):
     if like_button:
         action = ActionChains(browser).move_to_element(like_button[0]).click().perform()
         print('Image liked')
-        sleep(1)
+        random_sleep(2)
         return True
     elif unlike_button:
         print('Image already liked')
-        sleep(1)
+        random_sleep(2)
         return False
     else:
         print('Cannot find like button')
-        sleep(1)
+        random_sleep(2)
         return False

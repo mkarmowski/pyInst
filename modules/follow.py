@@ -1,9 +1,9 @@
-from time import sleep
+from modules.time import random_sleep
 
 
 def follow(browser):
     follow_button = browser.find_element_by_xpath("//article/header/span/button")
-    sleep(1)
+    random_sleep(2)
 
     if follow_button.text == 'Follow':
         follow_button.click()
