@@ -3,7 +3,7 @@ from random import randint
 
 from modules.comment import comment_post
 from modules.follow import follow
-from modules.like import get_links_by_tag, like_post
+from modules.like import get_links_by_tag, like_post, verify_post
 from modules.login import login_user
 from webdriver.options import chrome_options
 from selenium import webdriver
@@ -26,6 +26,10 @@ class InstaMain:
         self.allow_following = False
         self.follow_percentage = 0
         self.do_not_follow = []         # TODO following restrictions
+
+        self.ignore_users = []
+        self.ignore_tags = []
+        self.ignore_description = []
 
     def login(self):
         if login_user(self.browser, self.username, self.password):
@@ -59,9 +63,25 @@ class InstaMain:
 
         return self
 
+    def set_ignore_users(self, users=None):
+        self.ignore_users = users or []
+
+        return self
+
+    def set_ignore_tags(self, tags=None):
+        self.ignore_tags = tags or []
+
+        return self
+
+    def set_ignore_description(self, words=None):
+        self.ignore_description = words or []
+
+        return self
+
     def like_image(self, tags=None, count=100):
         liked_images = 0
         already_liked = 0
+        ignored_images = 0
         commented = 0
         liked_links = []
         already_liked_links = []
@@ -80,25 +100,31 @@ class InstaMain:
                 self.browser.get(link)
 
                 try:
-                    liked = like_post(self.browser)
+                    is_ignored, reason, user_name = verify_post(self.browser, link, self.ignore_users,
+                                                     self.ignore_tags, self.ignore_description)
 
-                    if liked:
-                        liked_images += 1
-                        liked_links.append(link)
-                        commenting = randint(0, 100) <= self.comment_percentage
+                    if not is_ignored:
+                        liked = like_post(self.browser)
+                        if liked:
+                            liked_images += 1
+                            liked_links.append(link)
+                            commenting = randint(0, 100) <= self.comment_percentage
 
-                        if self.post_comments and commenting:
-                            comment_post(self.browser, self.comments)
-                            commented += 1
-                            commented_links.append(link)
-                            print('Commented on post: {}'.format(link))
+                            if self.post_comments and commenting:
+                                comment_post(self.browser, self.comments)
+                                commented += 1
+                                commented_links.append(link)
+                                print('Commented on post: {}'.format(link))
 
-                        if self.allow_following:
-                            follow(self.browser)
+                            if self.allow_following:
+                                follow(self.browser)
 
+                        else:
+                            already_liked += 1
+                            already_liked_links.append(link)
                     else:
-                        already_liked += 1
-                        already_liked_links.append(link)
+                        print('Image not liked: {} - {}'. format(link, reason))
+                        ignored_images += 1
 
                 except NoSuchElementException:
                     self.logs.write('Invalid Page: {}\n'.format(NoSuchElementException))
@@ -106,10 +132,12 @@ class InstaMain:
 
         self.logs.write('Liked images: {}\n'.format(liked_images))
         self.logs.write('Already liked images: {}\n'.format(already_liked))
+        self.logs.write('Images ignored: {}\n'.format(ignored_images))
         self.logs.write('Links to liked images: {}\n'.format(liked_links))
         self.logs.write('Links to already liked images: {}\n'.format(already_liked_links))
         print('Liked images:\n{}\n'.format(liked_images))
         print('Already liked images:\n{}\n'.format(already_liked))
+        print('Images ignored:\n{}\n'.format(ignored_images))
 
         return self
 

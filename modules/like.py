@@ -71,3 +71,52 @@ def like_post(browser):
         print('Cannot find like button')
         random_sleep(2)
         return False
+
+
+def verify_post(browser, link, ignore_users, ignore_tags, ignore_description):
+    """verify if post should be liked based on set conditions"""
+    browser.get(link)
+    random_sleep(2)
+
+    # post page exists:
+    post_page = browser.execute_script("return window._sharedData.entry_data.PostPage")
+    print(post_page)
+
+    if post_page is None:
+        return True, 'Page not found', None
+
+    # get tags and description
+    graphql = 'graphql' in post_page[0]
+    if graphql:
+        user_name = post_page[0]['graphql']['shortcode_media']['owner']['username']
+        # description = post_page[0]['graphql']['shortcode_media']['edge_media_to_caption']['edges']['node']['text']
+        # post_description = description if description else None
+        post_description = post_page[0]['graphql']['shortcode_media']['edge_media_to_caption']['edges']
+        post_description = post_description[0]['node']['text'] if post_description else None
+    else:
+        user_name = post_page[0]['media']['owner']['username']
+        post_description = post_page[0]['media']['caption']
+
+    if post_description is None:
+        # get first comment
+        if graphql:
+            description = post_page[0]['graphql']['shortcode_media']['edge_media_to_comment']['edges']['node']['text']
+            post_description = description if description else None
+        else:
+            description = post_page[0]['graphql']['shortcode_media']['comments']['nodes']['text']
+            post_description = description if description else None
+
+    if post_description is None:
+        post_description = "No description"
+
+    # Check ignore conditions
+    if user_name in ignore_users:
+        return True, 'User in ignore list', user_name
+
+    if any(tag.lower() in post_description for tag in ignore_tags):
+        return True, 'Tag in ignore list', user_name
+
+    if any(word in post_description for word in ignore_description):
+        return True, 'Description in ignore list', user_name
+
+    return False, 'Not ignored', user_name
